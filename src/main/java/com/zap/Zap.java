@@ -35,6 +35,10 @@ public final class Zap {
 
             if (exitCode != 0) System.exit(exitCode);
         }
+        catch (IllegalStateException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
+        }
         catch (IOException e) {
             System.err.println("I/O error: " + e.getMessage());
             System.exit(1);
