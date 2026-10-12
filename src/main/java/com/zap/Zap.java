@@ -1,40 +1,48 @@
 package com.zap;
 
 import com.zap.cli.CommandParser;
-import com.zap.project.ProjectLocator;
-import com.zap.project.SourceDiscovery;
+import com.zap.execution.ProjectExecutor;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public final class Zap {
 
-    private Zap() {}
-
     private static final String VERSION = "0.1.0";
 
-    public static void main(String[] args) {
+    private Zap() {}
 
+    public static void main(String[] args) {
         CommandParser commandParser = new CommandParser();
         CommandParser.Command command = commandParser.parse(args);
 
         switch (command) {
-
-            case RUN -> inspectProject();
-
+            case RUN -> runProject();
             case HELP -> printHelp();
-
-            case VERSION -> System.out.println(
-                    "Zap " + VERSION
-            );
-
+            case VERSION -> System.out.println("Zap " + VERSION);
             case UNKNOWN -> {
-                System.err.println(
-                        "Error: Unknown command."
-                );
+                System.err.println("Error: Unknown command.");
                 printHelp();
                 System.exit(2);
             }
+        }
+    }
+
+    private static void runProject() {
+        ProjectExecutor executor = new ProjectExecutor();
+
+        try {
+            int exitCode = executor.execute();
+
+            if (exitCode != 0) System.exit(exitCode);
+        }
+        catch (IOException e) {
+            System.err.println("I/O error: " + e.getMessage());
+            System.exit(1);
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Execution interrupted.");
+            System.exit(130);
         }
     }
 
@@ -47,27 +55,5 @@ public final class Zap {
                   zap help      Show this help message
                   zap version   Show the current version
                 """);
-    }
-
-    private static void inspectProject() {
-        try {
-            ProjectLocator locator = new ProjectLocator();
-            Path projectRoot = locator.locate();
-
-            Path sourceDirectory = projectRoot.resolve("src");
-
-            SourceDiscovery discovery = new SourceDiscovery();
-
-            System.out.println("Project: " + projectRoot);
-            System.out.println("Java sources:");
-
-            for (Path source : discovery.discover(sourceDirectory))
-                System.out.println("  " + source);
-
-        }
-        catch (IOException | IllegalArgumentException e) {
-            System.err.println("Error: " + e.getMessage());
-            System.exit(1);
-        }
     }
 }
