@@ -18,6 +18,12 @@ public final class SourceDiscovery {
                             + sourceDirectory
             );
 
+        /*
+         * here we collect a stream of paths. streams are not lists; so it does not keep
+         * the items in memory and creates each item on at a time.
+         *
+         * first filter >> only paths that are regular files can pass.
+         */
         try (Stream<Path> paths = Files.walk(sourceDirectory)) {
             Objects.requireNonNull(paths);
             return paths
