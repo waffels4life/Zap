@@ -52,12 +52,20 @@ public final class Zap {
 
     private static void printHelp() {
         System.out.println("""
-                Zap - Fast Java project runner
+            Zap - Fast Java project runner
 
-                Usage:
-                  zap run       Compile and run a Java project
-                  zap help      Show this help message
-                  zap version   Show the current version
-                """);
+            Usage:
+              zap <command>
+
+            Commands:
+              run       Compile and run the Java project
+              help      Show available commands
+              version   Show the current version
+
+            Examples:
+              zap run
+              zap help
+              zap version
+            """);
     }
 }
