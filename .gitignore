@@ -15,3 +15,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Demo files
+src/main/java/com/zap/demo/src/Main.java
+src/main/java/com/zap/demo/src/service
