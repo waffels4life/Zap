@@ -1,0 +1,17 @@
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Compiled
+out/
+target/
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
