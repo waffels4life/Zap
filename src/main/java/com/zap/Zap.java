@@ -1,9 +1,12 @@
 package com.zap;
 
 import com.zap.cli.CommandParser;
+import com.zap.config.ConfigLoader;
+import com.zap.config.ZapConfig;
 import com.zap.execution.ProjectExecutor;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public final class Zap {
 
