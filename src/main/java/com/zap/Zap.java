@@ -113,7 +113,7 @@ public final class Zap {
             Zap - Fast Java project runner
 
             Usage:
-              zap <command>
+              zap <order> --<command> [data]
 
             Commands:
               init      Initialize Zap in the current project
