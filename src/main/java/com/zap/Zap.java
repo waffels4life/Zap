@@ -1,9 +1,8 @@
 package com.zap;
 
 import com.zap.cli.CommandParser;
-import com.zap.config.ConfigLoader;
-import com.zap.config.ZapConfig;
 import com.zap.execution.ProjectExecutor;
+import com.zap.project.ProjectInitializer;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,6 +25,7 @@ public final class Zap {
         CommandParser.Command command = commandParser.parse(args);
 
         switch (command) {
+            case INIT -> initializeProject();
             case RUN -> runProject();
             case HELP -> printHelp();
             case VERSION -> System.out.println("Zap " + VERSION);
@@ -44,6 +44,28 @@ public final class Zap {
     /**
      * Connecting CLI to executer engine
      */
+
+    private static void initializeProject() {
+        try {
+            Path projectRoot = Path.of(System.getProperty("user.dir"))
+                    .toAbsolutePath()
+                    .normalize();
+
+            ProjectInitializer initializer = new ProjectInitializer();
+            initializer.initialize(projectRoot);
+
+        }
+        catch (IllegalStateException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
+
+        }
+        catch (IOException e) {
+            System.err.println("I/O error: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
     private static void runProject() {
         ProjectExecutor executor = new ProjectExecutor();
 
@@ -94,6 +116,7 @@ public final class Zap {
               zap <command>
 
             Commands:
+              init      Initialize Zap in the current project
               run       Compile and run the Java project
               help      Show available commands
               version   Show the current version
