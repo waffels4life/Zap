@@ -38,26 +38,9 @@ public final class ConfigLoader {
 
         Objects.requireNonNull(projectRoot, "projectRoot");
         Path configPath = getConfigPath(projectRoot);
-
-        if (!Files.exists(configPath))
-            throw new ConfigMissingException(
-                    "Config file does not exist: " + configPath
-            );
-
-        if (!Files.isRegularFile(configPath)) {
-            throw new ConfigNotReadableException(
-                    "Config path is not a regular file: " + configPath
-            );
-        }
-
-        if (!Files.isReadable(configPath)) {
-            throw new ConfigNotReadableException(
-                    "Config file is not readable: " + configPath
-            );
-        }
+        loadValidator(configPath);
 
         Properties properties = new Properties();
-
         try (Reader reader = Files.newBufferedReader(
                 configPath,
                 StandardCharsets.UTF_8)) {
@@ -75,7 +58,6 @@ public final class ConfigLoader {
         }
 
         ZapConfig defaults = ZapConfig.defaults();
-
         return new ZapConfig(
                 getValue(properties, "source.directory", defaults.sourceDirectory()),
                 getValue(properties, "compiler.executable", defaults.compilerExecutable()),
@@ -83,6 +65,24 @@ public final class ConfigLoader {
                 getValue(properties, "runtime.executable", defaults.runtimeExecutable()),
                 getValue(properties, "main.class", defaults.mainClass())
         );
+    }
+
+    private static void loadValidator(Path configPath) {
+        if (!Files.exists(configPath))
+            throw new ConfigMissingException(
+                    "Config file does not exist: " + configPath
+            );
+
+        if (!Files.isRegularFile(configPath))
+            throw new ConfigNotReadableException(
+                    "Config path is not a regular file: " + configPath
+            );
+
+
+        if (!Files.isReadable(configPath))
+            throw new ConfigNotReadableException(
+                    "Config file is not readable: " + configPath
+            );
     }
 
     public void save(Path projectRoot,
