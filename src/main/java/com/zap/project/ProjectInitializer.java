@@ -26,7 +26,7 @@ public final class ProjectInitializer {
 
         System.out.println("Zap initialized successfully.");
         System.out.println("Configuration: .zap/config.properties");
-        System.out.println("Main class: " + zapConfig.getMainClass());
+        System.out.println("Main class: " + zapConfig.mainClass());
         System.out.println("Run `zap help` to see available commands.");
     }
 }

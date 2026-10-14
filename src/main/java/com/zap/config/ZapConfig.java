@@ -1,12 +1,10 @@
 package com.zap.config;
 
-public final class ZapConfig {
-
-    private final String sourceDirectory;
-    private final String compilerExecutable;
-    private final String outputDirectory;
-    private final String runtimeExecutable;
-    private final String mainClass;
+public record ZapConfig(String sourceDirectory,
+                        String compilerExecutable,
+                        String outputDirectory,
+                        String runtimeExecutable,
+                        String mainClass) {
 
     public ZapConfig(
             String sourceDirectory,
@@ -52,25 +50,5 @@ public final class ZapConfig {
             );
 
         return value.trim();
-    }
-
-    public String getSourceDirectory() {
-        return sourceDirectory;
-    }
-
-    public String getCompilerExecutable() {
-        return compilerExecutable;
-    }
-
-    public String getOutputDirectory() {
-        return outputDirectory;
-    }
-
-    public String getRuntimeExecutable() {
-        return runtimeExecutable;
-    }
-
-    public String getMainClass() {
-        return mainClass;
     }
 }

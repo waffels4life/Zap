@@ -1,6 +1,8 @@
 package com.zap.config;
 
 import com.zap.exception.ConfigIncorrectFormatException;
+import com.zap.exception.ConfigIncorrectValuesException;
+import com.zap.exception.ConfigMissingException;
 import com.zap.exception.ConfigNotReadableException;
 import com.zap.exception.ConfigurationException;
 
@@ -33,19 +35,14 @@ public final class ConfigLoader {
     }
 
     public ZapConfig load(Path projectRoot) throws ConfigurationException {
-        // 2) format correct?
-        //    Properties.load(...) throws IllegalArgumentException -> ConfigFormatException
 
-        // 3) values correct?
-        //    key "main" missing or blank  -> ConfigValueException
-        //    Path.of(raw) may throw InvalidPathException -> catch it
-        //    Files.isRegularFile(main) false -> ConfigValueException
         Objects.requireNonNull(projectRoot, "projectRoot");
         Path configPath = getConfigPath(projectRoot);
 
-        if (!Files.exists(configPath)) {
-            // missing file: the caller decides (see the flowchart)
-        }
+        if (!Files.exists(configPath))
+            throw new ConfigMissingException(
+                    "Config file does not exist: " + configPath
+            );
 
         if (!Files.isRegularFile(configPath)) {
             throw new ConfigNotReadableException(
@@ -55,13 +52,15 @@ public final class ConfigLoader {
 
         if (!Files.isReadable(configPath)) {
             throw new ConfigNotReadableException(
-                    "Config path is not a regular file: " + configPath
+                    "Config file is not readable: " + configPath
             );
         }
 
         Properties properties = new Properties();
 
-        try (Reader reader = Files.newBufferedReader(configPath, StandardCharsets.UTF_8)) {
+        try (Reader reader = Files.newBufferedReader(
+                configPath,
+                StandardCharsets.UTF_8)) {
             properties.load(reader);
         }
         catch (MalformedInputException | IllegalArgumentException e) {
@@ -78,30 +77,35 @@ public final class ConfigLoader {
         ZapConfig defaults = ZapConfig.defaults();
 
         return new ZapConfig(
-                getValue(properties, "source.directory", defaults.getSourceDirectory()),
-                getValue(properties, "compiler.executable", defaults.getCompilerExecutable()),
-                getValue(properties, "output.directory", defaults.getOutputDirectory()),
-                getValue(properties, "runtime.executable", defaults.getRuntimeExecutable()),
-                getValue(properties, "main.class", defaults.getMainClass())
+                getValue(properties, "source.directory", defaults.sourceDirectory()),
+                getValue(properties, "compiler.executable", defaults.compilerExecutable()),
+                getValue(properties, "output.directory", defaults.outputDirectory()),
+                getValue(properties, "runtime.executable", defaults.runtimeExecutable()),
+                getValue(properties, "main.class", defaults.mainClass())
         );
     }
 
-    public void save(Path projectRoot, ZapConfig config) throws IOException {
+    public void save(Path projectRoot,
+                     ZapConfig config) throws IOException {
+
+        Objects.requireNonNull(config, "config");
 
         Properties properties = new Properties();
-
-        properties.setProperty("source.directory", config.getSourceDirectory());
-        properties.setProperty("compiler.executable", config.getCompilerExecutable());
-        properties.setProperty("output.directory", config.getOutputDirectory());
-        properties.setProperty("runtime.executable", config.getRuntimeExecutable());
-        properties.setProperty("main.class", config.getMainClass());
+        properties.setProperty("source.directory", config.sourceDirectory());
+        properties.setProperty("compiler.executable", config.compilerExecutable());
+        properties.setProperty("output.directory", config.outputDirectory());
+        properties.setProperty("runtime.executable", config.runtimeExecutable());
+        properties.setProperty("main.class", config.mainClass());
 
         Path configPath = getConfigPath(projectRoot);
-        Path tmp = Files.createTempFile(configPath.getParent(), "config,", ".tmp");
-        Files.createDirectories(configPath.getParent());
+        Path dir = configPath.getParent();
+        Files.createDirectories(dir);
+        Path tmp = Files.createTempFile(dir, "config-", ".tmp");
 
         try {
-            try (Writer writer = Files.newBufferedWriter(configPath)) {
+            try (Writer writer = Files.newBufferedWriter(
+                    tmp, StandardCharsets.UTF_8
+            )) {
                 properties.store(writer, "Zap project configuration");
             }
             try {
@@ -116,10 +120,22 @@ public final class ConfigLoader {
         }
     }
 
-    private String getValue(Properties properties,
-                            String key,
-                            String defaultValue) {
+    private static String getValue(Properties properties,
+                                    String key,
+                                    String defaultValue)
+            throws ConfigIncorrectValuesException {
+
         Objects.requireNonNull(properties, "properties");
-        return properties.getProperty(key, defaultValue);
+        String raw = properties.getProperty(key);
+
+        if (raw == null) return defaultValue;
+        String value = raw.trim();
+
+        if (value.isEmpty())
+            throw new ConfigIncorrectValuesException(
+                    key + " must not be blank."
+            );
+
+        return value;
     }
 }
