@@ -1,24 +1,16 @@
 package com.zap.config;
 
-import java.util.Objects;
-
 public record ZapConfig(String sourceDirectory,
                         String compilerExecutable,
                         String outputDirectory,
                         String runtimeExecutable,
-                        String mainClass,
-                        Mode mode) {
-
-    public enum Mode {
-        AUTO, CUSTOM
-    }
+                        String mainClass) {
 
     public ZapConfig(String sourceDirectory,
                      String compilerExecutable,
                      String outputDirectory,
                      String runtimeExecutable,
-                     String mainClass,
-                     Mode mode) {
+                     String mainClass) {
 
         this.sourceDirectory = requireNonBlank(
                 sourceDirectory, "source.directory"
@@ -33,10 +25,7 @@ public record ZapConfig(String sourceDirectory,
                 runtimeExecutable, "runtime.executable"
         );
         this.mainClass = requireNonBlank(
-                mainClass, "auto"
-        );
-        this.mode = Objects.requireNonNull(
-                mode, "mode"
+                mainClass, "main.class"
         );
     }
 
@@ -46,8 +35,7 @@ public record ZapConfig(String sourceDirectory,
                 "javac",
                 ".zap/classes",
                 "java",
-                "Main.java",
-                Mode.AUTO
+                "auto"
         );
     }
 
