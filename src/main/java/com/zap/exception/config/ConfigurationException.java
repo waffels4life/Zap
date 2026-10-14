@@ -1,4 +1,4 @@
-package com.zap.exception;
+package com.zap.exception.config;
 
 /**
  * super class for all exceptions related to Configurations

@@ -1,4 +1,4 @@
-package com.zap.exception;
+package com.zap.exception.config;
 
 /**
  * throws if configuration file did not exist.
