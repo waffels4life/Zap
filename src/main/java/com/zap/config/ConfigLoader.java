@@ -1,11 +1,14 @@
 package com.zap.config;
 
+import com.zap.exception.ConfigIncorrectFormatException;
 import com.zap.exception.ConfigNotReadableException;
 import com.zap.exception.ConfigurationException;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +32,7 @@ public final class ConfigLoader {
         return Files.isRegularFile(getConfigPath(projectRoot));
     }
 
-    public ZapConfig load(Path projectRoot) throws IOException {
+    public ZapConfig load(Path projectRoot) throws ConfigurationException {
         // 2) format correct?
         //    Properties.load(...) throws IllegalArgumentException -> ConfigFormatException
 
@@ -40,30 +43,35 @@ public final class ConfigLoader {
         Objects.requireNonNull(projectRoot, "projectRoot");
         Path configPath = getConfigPath(projectRoot);
 
-        if (!Files.isReadable(projectRoot))
-            throw new ConfigNotReadableException(
-                    "Configuration file is not readable", new IOException()
-            );
+        if (!Files.exists(configPath)) {
+            // missing file: the caller decides (see the flowchart)
+        }
 
         if (!Files.isRegularFile(configPath)) {
-            if (Files.exists(configPath)) {
-                throw new IOException(
-                        "Configuration path is not a regular file: "
-                                + configPath
-                );
-            }
+            throw new ConfigNotReadableException(
+                    "Config path is not a regular file: " + configPath
+            );
+        }
 
-            return ZapConfig.defaults();
+        if (!Files.isReadable(configPath)) {
+            throw new ConfigNotReadableException(
+                    "Config path is not a regular file: " + configPath
+            );
         }
 
         Properties properties = new Properties();
 
-        try (Reader reader = Files.newBufferedReader(configPath)) {
+        try (Reader reader = Files.newBufferedReader(configPath, StandardCharsets.UTF_8)) {
             properties.load(reader);
         }
-        catch (ConfigurationException e) {
+        catch (MalformedInputException | IllegalArgumentException e) {
+            throw new ConfigIncorrectFormatException(
+                    "Invalid config format: " + configPath, e
+            );
+        }
+        catch (IOException e) {
             throw new ConfigNotReadableException(
-                    "Error while reading the file.", new IOException()
+                    "Cannot read config: " + configPath, e
             );
         }
 
