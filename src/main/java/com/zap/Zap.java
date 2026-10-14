@@ -120,11 +120,6 @@ public final class Zap {
               run       Compile and run the Java project
               help      Show available commands
               version   Show the current version
-
-            Examples:
-              zap run
-              zap help
-              zap version
             """);
     }
 }
