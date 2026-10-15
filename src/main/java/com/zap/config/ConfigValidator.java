@@ -1,17 +1,13 @@
 package com.zap.config;
 
-import com.zap.exception.config.ConfigKeyMissingException;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
 public final class ConfigValidator {
 
-    private static final List<Exception> exceptionList = new ArrayList<>();
-    private static final List<String> keys = List.of(
+    private static final List<String> REQUIRED_KEYS  = List.of(
             ConfigKeys.SOURCE_DIRECTORY,
             ConfigKeys.COMPILER_EXECUTABLE,
             ConfigKeys.OUTPUT_DIRECTORY,
@@ -19,28 +15,27 @@ public final class ConfigValidator {
             ConfigKeys.MAIN_CLASS
     );
 
-    public List<Exception> validate(Properties properties) throws Exception {
+    public record ConfigViolation(String key, String message) {}
+
+    public List<ConfigViolation> validate(Properties properties) {
 
         Objects.requireNonNull(properties, "properties");
-        if (properties.isEmpty())
-            throw new ConfigKeyMissingException(
-                    "Configuration is empty. at: " + properties.getClass()
-            );
-        /*
-         * Checks whether if config file contains all the keys.
-         */
-        for (String key : keys)
-            if (!properties.containsKey(key))
-                exceptionList.add(
-                        new ConfigKeyMissingException(
-                                "Missing required configuration key: " + key
-                        )
+        List<ConfigViolation> violations = new ArrayList<>();
+
+        for (String key : REQUIRED_KEYS) {
+            String value = properties.getProperty(key);
+
+            if (value == null)
+                violations.add(new ConfigViolation(
+                        key, "Missing required configuration key: " + key)
+                );
+            else if (value.isBlank())
+                violations.add(new ConfigViolation(
+                        key, "Configuration key has a blank value: " + key)
                 );
 
-        return exceptionList;
-    }
+        }
 
-    public int getExceptionListSize() {
-        return exceptionList.size();
+        return List.copyOf(violations);
     }
 }
