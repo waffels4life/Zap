@@ -37,5 +37,10 @@ public final class ConfigValidator {
                         )
                 );
 
+        return exceptionList;
+    }
+
+    public int getExceptionListSize() {
+        return exceptionList.size();
     }
 }
