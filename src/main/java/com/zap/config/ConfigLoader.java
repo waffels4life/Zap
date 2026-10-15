@@ -19,18 +19,9 @@ import java.util.Properties;
  */
 public final class ConfigLoader {
 
-    /*
-     * These are the default paths
-     * final path will always be at the end of project root
-     * \..\..\..\final\ >> first .zap, then files
-     */
     private static final String CONFIG_DIRECTORY = ".zap";
     private static final String CONFIG_FILE = "config.properties";
 
-    /*
-     * first we just check whether the entry path is empty or not >> no null & blank
-     * Then it just resolve the path together.
-     */
     public Path getConfigPath(Path projectRoot) {
         Objects.requireNonNull(projectRoot, "projectRoot");
         return projectRoot
@@ -52,6 +43,7 @@ public final class ConfigLoader {
             );
 
         Properties properties = new Properties();
+
         try (Reader reader = Files.newBufferedReader(
                 configPath, StandardCharsets.UTF_8)
         ) {
@@ -71,6 +63,4 @@ public final class ConfigLoader {
             );
         }
     }
-
-
 }
