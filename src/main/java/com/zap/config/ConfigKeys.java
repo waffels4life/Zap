@@ -14,4 +14,5 @@ public final class ConfigKeys {
     public static final String OUTPUT_DIRECTORY = "output.directory";
     public static final String RUNTIME_EXECUTABLE = "runtime.executable";
     public static final String MAIN_CLASS = "main.class";
+    public static final String AUTO_MAIN_CLASS = "auto";
 }
