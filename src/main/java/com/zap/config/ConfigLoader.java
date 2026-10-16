@@ -48,7 +48,7 @@ public final class ConfigLoader {
                 configPath, StandardCharsets.UTF_8)
         ) {
             properties.load(reader);
-            return properties;
+            return Objects.requireNonNull(properties, "properties");
         }
         catch (MalformedInputException | IllegalArgumentException e) {
             throw new ConfigFormatException(
