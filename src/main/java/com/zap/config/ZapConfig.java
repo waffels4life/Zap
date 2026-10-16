@@ -1,51 +1,46 @@
 package com.zap.config;
 
-public record ZapConfig(String sourceDirectory,
+import java.nio.file.Path;
+import java.util.Objects;
+
+public record ZapConfig(Path sourceDirectory,
                         String compilerExecutable,
-                        String outputDirectory,
+                        Path outputDirectory,
                         String runtimeExecutable,
                         String mainClass) {
 
-    public ZapConfig(String sourceDirectory,
-                     String compilerExecutable,
-                     String outputDirectory,
-                     String runtimeExecutable,
-                     String mainClass) {
+    public ZapConfig {
 
-        this.sourceDirectory = requireNonBlank(
-                sourceDirectory, "source.directory"
+        Objects.requireNonNull(sourceDirectory, ConfigKeys.SOURCE_DIRECTORY);
+        Objects.requireNonNull(outputDirectory, ConfigKeys.OUTPUT_DIRECTORY);
+
+        compilerExecutable = requireNonBlank(
+                compilerExecutable, ConfigKeys.COMPILER_EXECUTABLE
         );
-        this.compilerExecutable = requireNonBlank(
-                compilerExecutable, "compiler.executable"
+
+        runtimeExecutable = requireNonBlank(
+                runtimeExecutable, ConfigKeys.RUNTIME_EXECUTABLE
         );
-        this.outputDirectory = requireNonBlank(
-                outputDirectory, "output.directory"
-        );
-        this.runtimeExecutable = requireNonBlank(
-                runtimeExecutable, "runtime.executable"
-        );
-        this.mainClass = requireNonBlank(
-                mainClass, "main.class"
+
+        mainClass = requireNonBlank(
+                mainClass, ConfigKeys.MAIN_CLASS
         );
     }
 
     public static ZapConfig defaults() {
         return new ZapConfig(
-                "src/main/java",
+                Path.of("src/main/java"),
                 "javac",
-                ".zap/classes",
+                Path.of(".zap/classes"),
                 "java",
-                "auto"
+                ConfigKeys.AUTO_MAIN_CLASS
         );
     }
 
-    private static String requireNonBlank(String value,
-                                          String propertyName) {
-
+    private static String requireNonBlank(String value, String key) {
         if (value == null || value.isBlank())
             throw new IllegalArgumentException(
-                    "Configuration value must not be blank: "
-                            + propertyName
+                    "Configuration value must not be blank: " + key
             );
 
         return value.trim();
