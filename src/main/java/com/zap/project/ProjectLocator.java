@@ -1,35 +1,38 @@
 package com.zap.project;
 
+import com.zap.config.ConfigPaths;
+import com.zap.exception.config.ProjectNotInitializedException;
+import com.zap.exception.config.ProjectStructureException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public final class ProjectLocator {
 
-    private static final String CONFIG_FILE = "zap.properties";
-
-    public Path locate() {
-        /*
-         * while running, Java will prepare some system attributes; like Java version,
-         * SystemOS, etc. one of them is [user.dir]
-         *
-         * user.dir >> folder where the program was started via terminal
-         *
-         * [NOTE]   >> user.dir is NOT the folder that contains classes and files.
-         *          >> It's just the folder that user stood and used the terminal.
-         *
-         * cd /home/arsam/phantom
-         * zap run => user.dir : /home/arsam/phantom
-         */
-        Path workingDirectory = Path.of(System.getProperty("user.dir"))
+    public Path currentDirectory() {
+        Path directory = Path.of(System.getProperty("user.dir"))
                 .toAbsolutePath()
                 .normalize();
 
-        if (!Files.isDirectory(workingDirectory))
-            throw new IllegalStateException(
-                    "Working directory does not exist: "
-                            + workingDirectory
-            );
+        if (!Files.isDirectory(directory)) {
+            throw new ProjectStructureException(
+                    "Working directory does not exist: " + directory);
+        }
+        return directory;
+    }
 
-        return workingDirectory;
+    public Path locate(Path start) {
+        Objects.requireNonNull(start, "start");
+
+        for (Path dir = start.toAbsolutePath().normalize();
+             dir != null;
+             dir = dir.getParent()) {
+
+            if (Files.isRegularFile(ConfigPaths.configFile(dir)))
+                return dir;
+
+        }
+        throw new ProjectNotInitializedException(start);
     }
 }

@@ -1,6 +1,4 @@
-package com.zap.exception.config;
-
-import com.zap.exception.ZapException;
+package com.zap.exception;
 
 public class ZapIoException extends ZapException {
     public ZapIoException(String message, Throwable cause) {
