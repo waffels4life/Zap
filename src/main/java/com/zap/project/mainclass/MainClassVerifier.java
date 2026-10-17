@@ -1,4 +1,4 @@
-package com.zap.config;
+package com.zap.project.mainclass;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

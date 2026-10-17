@@ -1,6 +1,5 @@
 package com.zap.execution;
 
-import com.zap.project.MainClassResolver;
 import com.zap.project.ProjectLocator;
 import com.zap.project.SourceDiscovery;
 
@@ -14,7 +13,6 @@ public final class ProjectExecutor {
     private final SourceDiscovery sourceDiscovery;
     private final CompilerRunner compilerRunner;
     private final ProgramRunner programRunner;
-    private final MainClassResolver mainClassResolver;
 
     public ProjectExecutor() {
         this.projectLocator = new ProjectLocator();
