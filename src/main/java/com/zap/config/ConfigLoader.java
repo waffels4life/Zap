@@ -1,7 +1,8 @@
 package com.zap.config;
 
-import com.zap.exception.config.ConfigFormatException;
-import com.zap.exception.config.ConfigReadabilityException;
+import com.zap.exception.config.ConfigFileNotFoundException;
+import com.zap.exception.config.ConfigFileUnreadableException;
+import com.zap.exception.config.ConfigFileFormatException;
 import com.zap.exception.config.ConfigurationException;
 
 import java.io.IOException;
@@ -32,15 +33,11 @@ public final class ConfigLoader {
     public Properties load(Path configPath) throws ConfigurationException {
         Objects.requireNonNull(configPath, "configPath");
 
-        if (!Files.isRegularFile(configPath))
-            throw new ConfigurationException(
-                    "Configuration is not a regular file. at: " + configPath
-            );
+        if (Files.notExists(configPath))
+            throw new ConfigFileNotFoundException(configPath);
 
-        if (!Files.isReadable(configPath))
-            throw new ConfigReadabilityException(
-                    "Configuration is not readable. at: " + configPath
-            );
+        if (!Files.isRegularFile(configPath) || !Files.isReadable(configPath))
+            throw new ConfigFileUnreadableException(configPath, null);
 
         Properties properties = new Properties();
 
@@ -51,16 +48,10 @@ public final class ConfigLoader {
             return Objects.requireNonNull(properties, "properties");
         }
         catch (MalformedInputException | IllegalArgumentException e) {
-            throw new ConfigFormatException(
-                    "Configuration content is invalid. at: "
-                            + configPath, e
-            );
+            throw new ConfigFileFormatException(configPath, e);
         }
         catch (IOException e) {
-            throw new ConfigReadabilityException(
-                    "Configuration is not readable. at: "
-                            + configPath, e
-            );
+            throw new ConfigFileUnreadableException(configPath, e);
         }
     }
 }
