@@ -1,5 +1,9 @@
 package com.zap.config;
 
+import com.zap.exception.config.ConfigFileNotFoundException;
+import com.zap.exception.config.InvalidConfigurationException;
+import com.zap.exception.config.ProjectNotInitializedException;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -15,12 +19,15 @@ public final class ConfigManager {
         this.validator = Objects.requireNonNull(validator, "validator");
     }
 
-    public ZapConfig resolve(Path file) {
-        Properties user;
+    public ZapConfig resolve(Path projectRoot) {
+        Objects.requireNonNull(projectRoot, "projectRoot");
 
-        try {user = loader.load(file);}
+        Properties user;
+        try {
+            user = loader.load(ConfigPaths.configFile(projectRoot));
+        }
         catch (ConfigFileNotFoundException e) {
-            return ZapConfig.defaults();
+            throw new ProjectNotInitializedException(projectRoot);
         }
 
         Properties merged = new Properties(defaultProperties());
