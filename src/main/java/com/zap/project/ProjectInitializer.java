@@ -1,32 +1,37 @@
 package com.zap.project;
 
-import com.zap.config.ConfigLoader;
+import com.zap.config.ConfigPaths;
+import com.zap.config.ConfigWriter;
 import com.zap.config.ZapConfig;
+import com.zap.exception.config.ConfigFileAlreadyExistsException;
+import com.zap.exception.project.AlreadyInitializedException;
 
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public final class ProjectInitializer {
 
-    private final ConfigLoader configLoader;
+    public record Result(Path configFile, ZapConfig config) {}
 
-    public ProjectInitializer() {
-        this.configLoader = new ConfigLoader();
+    private final ConfigWriter configWriter;
+
+    public ProjectInitializer(ConfigWriter configWriter) {
+        this.configWriter = Objects.requireNonNull(configWriter, "configWriter");
     }
 
-    public void initialize(Path projectRoot) throws IOException {
+    public Result initialize(Path projectRoot, ZapConfig config) {
+        Objects.requireNonNull(projectRoot, "projectRoot");
+        Objects.requireNonNull(config, "config");
 
-        if (configLoader.exists(projectRoot))
-            throw new IllegalStateException(
-                    "Project is already initialized."
-            );
+        Path file = ConfigPaths.configFile(projectRoot);
 
-        ZapConfig zapConfig = ZapConfig.defaults();
-        configLoader.save(projectRoot, zapConfig);
+        try {
+            configWriter.createNew(file, config);
+        }
+        catch (ConfigFileAlreadyExistsException e) {
+            throw new AlreadyInitializedException(projectRoot);
+        }
 
-        System.out.println("Zap initialized successfully.");
-        System.out.println("Configuration: .zap/config.properties");
-        System.out.println("Main class: " + zapConfig.mainClass());
-        System.out.println("Run `zap help` to see available commands.");
+        return new Result(file, config);
     }
 }

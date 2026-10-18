@@ -4,6 +4,7 @@ import com.zap.cli.CommandParser;
 import com.zap.config.ConfigLoader;
 import com.zap.config.ConfigManager;
 import com.zap.config.ConfigValidator;
+import com.zap.config.ConfigWriter;
 import com.zap.config.ZapConfig;
 import com.zap.exception.ZapException;
 import com.zap.exception.execution.ExecutionInterruptedException;
@@ -13,6 +14,7 @@ import com.zap.execution.ProcessRunner;
 import com.zap.execution.ProgramRunner;
 import com.zap.execution.ProjectExecutor;
 import com.zap.execution.RunOptions;
+import com.zap.project.ProjectInitializer;
 import com.zap.project.ProjectLayout;
 import com.zap.project.ProjectLocator;
 import com.zap.project.SourceDiscovery;
@@ -74,9 +76,16 @@ public final class Zap {
     }
 
     private static int initializeProject() {
-        // TODO: connect ProjectInitializer after ConfigWriter is written.
-        System.err.println("Error: `init` is not available yet.");
-        return EXIT_ERROR;
+        Path root = new ProjectLocator().currentDirectory();
+
+        ProjectInitializer.Result result = new ProjectInitializer(new ConfigWriter())
+                .initialize(root, ZapConfig.defaults());
+
+        System.out.println("Zap initialized successfully.");
+        System.out.println("Configuration: " + result.configFile());
+        System.out.println("Main class: " + result.config().mainClass());
+        System.out.println("Run `zap help` to see available commands.");
+        return EXIT_OK;
     }
 
     private static int runProject() {
