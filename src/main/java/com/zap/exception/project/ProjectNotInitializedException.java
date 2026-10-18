@@ -1,4 +1,4 @@
-package com.zap.exception.config;
+package com.zap.exception.project;
 
 import com.zap.exception.ZapException;
 

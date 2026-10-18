@@ -1,7 +1,7 @@
 package com.zap.project.mainclass;
 
 import com.zap.config.ConfigKeys;
-import com.zap.exception.config.MainClassException;
+import com.zap.exception.project.MainClassException;
 
 import java.nio.file.Path;
 import java.util.Objects;

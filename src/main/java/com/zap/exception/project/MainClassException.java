@@ -1,4 +1,4 @@
-package com.zap.exception.config;
+package com.zap.exception.project;
 
 import com.zap.exception.ZapException;
 
@@ -9,6 +9,11 @@ public final class MainClassException extends ZapException {
 
     private MainClassException(String message) {
         super(message);
+    }
+
+    public static MainClassException sourceNotFound(String className, Path expectedFile) {
+        return new MainClassException("Source file for " + className
+                + " not found. Expected: " + expectedFile);
     }
 
     public static MainClassException notFound(Path sourceDirectory) {

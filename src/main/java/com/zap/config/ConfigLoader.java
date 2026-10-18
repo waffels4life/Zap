@@ -1,5 +1,10 @@
 package com.zap.config;
 
+import com.zap.exception.config.ConfigFileFormatException;
+import com.zap.exception.config.ConfigFileNotFoundException;
+import com.zap.exception.config.ConfigFileUnreadableException;
+
+import javax.naming.ConfigurationException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.MalformedInputException;
@@ -25,7 +30,7 @@ public final class ConfigLoader {
                 .resolve(CONFIG_FILE);
     }
 
-    public Properties load(Path configPath) throws ConfigurationException {
+    public Properties load(Path configPath) {
         Objects.requireNonNull(configPath, "configPath");
 
         if (Files.notExists(configPath))

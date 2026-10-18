@@ -2,13 +2,15 @@ package com.zap;
 
 import com.zap.cli.Command;
 import com.zap.cli.CommandParser;
-import com.zap.config.ConfigKeys;
+import com.zap.cli.ConfigCommandHandler;
+import com.zap.cli.InitCommandHandler;
 import com.zap.config.ConfigLoader;
 import com.zap.config.ConfigManager;
 import com.zap.config.ConfigValidator;
 import com.zap.config.ConfigWriter;
 import com.zap.config.ZapConfig;
 import com.zap.exception.ZapException;
+import com.zap.exception.cli.CommandSyntaxException;
 import com.zap.exception.execution.ExecutionInterruptedException;
 import com.zap.execution.CompilerRunner;
 import com.zap.execution.OutputCleaner;
@@ -22,6 +24,7 @@ import com.zap.project.ProjectLocator;
 import com.zap.project.SourceDiscovery;
 import com.zap.project.mainclass.MainClassFinder;
 import com.zap.project.mainclass.MainClassResolver;
+import com.zap.project.mainclass.MainClassSourceLocator;
 import com.zap.project.mainclass.MainClassVerifier;
 
 import java.nio.file.Path;
@@ -47,6 +50,10 @@ public final class Zap {
             System.err.println(e.getMessage());
             exitCode = EXIT_INTERRUPTED;
         }
+        catch (CommandSyntaxException e) {
+            System.err.println("Error: " + e.getMessage());
+            exitCode = EXIT_MISUSE;
+        }
         catch (ZapException e) {
             System.err.println("Error: " + e.getMessage());
             exitCode = EXIT_ERROR;
@@ -59,8 +66,15 @@ public final class Zap {
         Command command = new CommandParser().parse(args);
 
         return switch (command) {
-            case Command.Init init -> initializeProject(init);
+            case Command.Init init -> {
+                createInitHandler().handle(init);
+                yield EXIT_OK;
+            }
             case Command.Run run -> runProject(run);
+            case Command.ConfigCommand config -> {
+                createConfigHandler().handle(config);
+                yield EXIT_OK;
+            }
             case Command.Help help -> {
                 printHelp();
                 yield EXIT_OK;
@@ -70,8 +84,21 @@ public final class Zap {
                 System.out.println("Zap " + VERSION);
                 yield EXIT_OK;
             }
-            case Command.ConfigCommand config -> notAvailable("config");
         };
+    }
+
+    private static int runProject(Command.Run run) {
+        ProjectLocator locator = new ProjectLocator();
+        Path root = locator.locate(locator.currentDirectory());
+
+        ZapConfig config = createManager().resolve(root);
+        ProjectLayout layout = ProjectLayout.of(root, config);
+
+        RunOptions options = new RunOptions(
+                run.inputs().isEmpty() ? config.inputs() : run.inputs(),
+                run.args().isEmpty() ? config.args() : run.args());
+
+        return createExecutor().execute(layout, config, options);
     }
 
     private static int notAvailable(String what) {
@@ -79,39 +106,26 @@ public final class Zap {
         return EXIT_ERROR;
     }
 
-    private static int initializeProject(Command.Init init) {
-        if (!init.mainClass().equals(ConfigKeys.AUTO_MAIN_CLASS))
-            return notAvailable("init <class>");
-
-        Path root = new ProjectLocator().currentDirectory();
-
-        ProjectInitializer.Result result = new ProjectInitializer(new ConfigWriter())
-                .initialize(root, ZapConfig.defaults());
-
-        System.out.println("Zap initialized successfully.");
-        System.out.println("Configuration: " + result.configFile());
-        System.out.println("Main class: " + result.config().mainClass());
-        System.out.println("Run `zap help` to see available commands.");
-        return EXIT_OK;
+    private static ConfigManager createManager() {
+        return new ConfigManager(
+                new ConfigLoader(), new ConfigValidator(), new ConfigWriter());
     }
 
-    private static int runProject(Command.Run run) {
-        ProjectLocator locator = new ProjectLocator();
-        Path root = locator.locate(locator.currentDirectory());
+    private static InitCommandHandler createInitHandler() {
+        return new InitCommandHandler(
+                new ProjectLocator(),
+                createManager(),
+                new MainClassSourceLocator(),
+                new ProjectInitializer(new ConfigWriter()),
+                System.out);
+    }
 
-        ZapConfig config = new ConfigManager(
-                new ConfigLoader(),
-                new ConfigValidator()
-        ).resolve(root);
-
-        ProjectLayout layout = ProjectLayout.of(root, config);
-
-        RunOptions options = new RunOptions(run.inputs(), run.args());
-        return createExecutor().execute(
-                layout,
-                config,
-                options
-        );
+    private static ConfigCommandHandler createConfigHandler() {
+        return new ConfigCommandHandler(
+                new ProjectLocator(),
+                createManager(),
+                new MainClassSourceLocator(),
+                System.out);
     }
 
     private static ProjectExecutor createExecutor() {
@@ -136,10 +150,11 @@ public final class Zap {
                   zap <command> [options]
 
                 Commands:
-                  init      Initialize Zap in the current project
-                  run       Compile and run the Java project
-                  help      Show available commands
-                  version   Show the current version
+                  init [auto | <package.Class>]   Initialize Zap in the current project
+                  run, -r [--input ...] [--args ...]   Compile and run the project
+                  config <option>                 Change the saved settings
+                  help [<command>]                Show help
+                  version                         Show the version
                 """);
     }
 }

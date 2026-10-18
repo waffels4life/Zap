@@ -73,8 +73,14 @@ public final class CommandParser {
 
     private static Command parseConfig(List<String> tokens) {
         Map<String, List<String>> options = readOptions("config", tokens, CONFIG_OPTIONS);
-        boolean reset = options.remove("--reset") != null;
 
+        List<String> resetValues = options.remove("--reset");
+        boolean reset = resetValues != null;
+
+        if (reset && !resetValues.isEmpty()) {
+            throw CommandSyntaxException.invalidUsage(
+                    "config", "--reset takes no values");
+        }
         if (options.size() != 1) {
             throw CommandSyntaxException.invalidUsage(
                     "config", "expected exactly one option");

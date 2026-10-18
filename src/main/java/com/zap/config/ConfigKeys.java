@@ -15,4 +15,6 @@ public final class ConfigKeys {
     public static final String RUNTIME_EXECUTABLE = "runtime.executable";
     public static final String MAIN_CLASS = "main.class";
     public static final String AUTO_MAIN_CLASS = "auto";
+    public static final String INPUT_PREFIX = "input.";
+    public static final String ARGS_PREFIX = "args.";
 }

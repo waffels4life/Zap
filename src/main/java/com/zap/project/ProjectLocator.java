@@ -1,7 +1,7 @@
 package com.zap.project;
 
 import com.zap.config.ConfigPaths;
-import com.zap.exception.config.ProjectNotInitializedException;
+import com.zap.exception.project.ProjectNotInitializedException;
 import com.zap.exception.config.ProjectStructureException;
 
 import java.nio.file.Files;

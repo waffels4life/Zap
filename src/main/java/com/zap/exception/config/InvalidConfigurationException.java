@@ -1,11 +1,9 @@
 package com.zap.exception.config;
 
-import com.zap.config.ConfigValidator.ConfigViolation;
-import com.zap.exception.ZapException;
-
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class InvalidConfigurationException extends ZapException {
+public final class InvalidConfigurationException extends ConfigurationException {
 
     private final List<ConfigViolation> violations;
 
@@ -14,23 +12,16 @@ public class InvalidConfigurationException extends ZapException {
         this.violations = List.copyOf(violations);
     }
 
-    public List<ConfigViolation> getViolations() {
+    public List<ConfigViolation> violations() {
         return violations;
     }
 
     private static String buildMessage(List<ConfigViolation> violations) {
-        StringBuilder message = new StringBuilder(
-                "Configuration validation failed:"
-        );
-
-        for (ConfigViolation violation : violations)
-            message.append(System.lineSeparator())
-                    .append("- ")
-                    .append(violation.key())
-                    .append(": ")
-                    .append(violation.message());
-
-
-        return message.toString();
+        return violations.stream()
+                .map(violation -> "- " + violation.message())
+                .collect(Collectors.joining(
+                        System.lineSeparator(),
+                        "Invalid configuration:" + System.lineSeparator(),
+                        ""));
     }
 }
