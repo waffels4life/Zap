@@ -1,6 +1,8 @@
 package com.zap;
 
+import com.zap.cli.Command;
 import com.zap.cli.CommandParser;
+import com.zap.config.ConfigKeys;
 import com.zap.config.ConfigLoader;
 import com.zap.config.ConfigManager;
 import com.zap.config.ConfigValidator;
@@ -54,28 +56,33 @@ public final class Zap {
     }
 
     private static int dispatch(String[] args) {
-        CommandParser.Command command = new CommandParser().parse(args);
+        Command command = new CommandParser().parse(args);
 
         return switch (command) {
-            case INIT -> initializeProject();
-            case RUN -> runProject();
-            case HELP -> {
+            case Command.Init init -> initializeProject(init);
+            case Command.Run run -> runProject(run);
+            case Command.Help help -> {
                 printHelp();
                 yield EXIT_OK;
             }
-            case VERSION -> {
+            case Command.HelpTopic topic -> notAvailable("help " + topic.command());
+            case Command.Version version -> {
                 System.out.println("Zap " + VERSION);
                 yield EXIT_OK;
             }
-            case UNKNOWN -> {
-                System.err.println("Error: Unknown command.");
-                printHelp();
-                yield EXIT_MISUSE;
-            }
+            case Command.ConfigCommand config -> notAvailable("config");
         };
     }
 
-    private static int initializeProject() {
+    private static int notAvailable(String what) {
+        System.err.println("Error: `" + what + "` is not available yet.");
+        return EXIT_ERROR;
+    }
+
+    private static int initializeProject(Command.Init init) {
+        if (!init.mainClass().equals(ConfigKeys.AUTO_MAIN_CLASS))
+            return notAvailable("init <class>");
+
         Path root = new ProjectLocator().currentDirectory();
 
         ProjectInitializer.Result result = new ProjectInitializer(new ConfigWriter())
@@ -88,15 +95,23 @@ public final class Zap {
         return EXIT_OK;
     }
 
-    private static int runProject() {
+    private static int runProject(Command.Run run) {
         ProjectLocator locator = new ProjectLocator();
         Path root = locator.locate(locator.currentDirectory());
 
-        ZapConfig config = new ConfigManager(new ConfigLoader(), new ConfigValidator())
-                .resolve(root);
+        ZapConfig config = new ConfigManager(
+                new ConfigLoader(),
+                new ConfigValidator()
+        ).resolve(root);
+
         ProjectLayout layout = ProjectLayout.of(root, config);
 
-        return createExecutor().execute(layout, config, RunOptions.none());
+        RunOptions options = new RunOptions(run.inputs(), run.args());
+        return createExecutor().execute(
+                layout,
+                config,
+                options
+        );
     }
 
     private static ProjectExecutor createExecutor() {
