@@ -4,7 +4,7 @@
 
 No build files. No plugins. No ceremony. Put your code in a folder, run `zap init`, then `zap run`.
 
-![Java](https://img.shields.io/badge/Java-21%2B-orange)
+![Java](https://img.shields.io/badge/Java-22%2B-orange)
 ![Build](https://img.shields.io/badge/build-Maven-blue)
 ![Dependencies](https://img.shields.io/badge/runtime%20dependencies-none-brightgreen)
 ![Status](https://img.shields.io/badge/status-early%20development-yellow)
