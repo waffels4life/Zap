@@ -25,7 +25,8 @@ Name? Age? Hello Oreo, age 4
 
 ## Table of contents
 
-- [Why Zap](#why-zap)
+- [Why I built Zap](#why-i-built-zap)
+- [What Zap does](#what-zap-does)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -45,7 +46,23 @@ Name? Age? Hello Oreo, age 4
 
 ---
 
-## Why Zap
+## Why I built Zap
+
+Compiling Java files manually was a nightmare for me. It felt like I was assembling NASA's systems, armed with a bunch of weird letters that looked like they came straight out of Ancient Greece.
+
+Make one tiny change, and suddenly you're rewriting compilation commands with every class and method listed all over again. One wrong character, and the whole thing falls apart.
+
+But when we're working in the terminal, we're usually experimenting: solving an algorithm problem, testing an idea, working through an exercise, or building a small command-line program.
+
+I wanted to focus on what I was actually trying to build, not worry about which files to compile, which classes to include, or how to write the same ridiculously long command for the hundredth time.
+
+So I built Zap.
+
+**I suffered so you don't have to.**
+
+---
+
+## What Zap does
 
 Running a small Java project from the terminal usually means typing a `javac` command with the right output directory and the right list of files, then a `java` command with the right class path and the right main class. Build tools solve this, but they also bring configuration files, plugins, and a learning curve that is too heavy for demos, exercises, and small tools.
 
@@ -56,6 +73,8 @@ find sources  ->  compile  ->  check the main method  ->  run
 ```
 
 Everything else is a saved setting you can change with one command.
+
+*Life's too short to hand-write compilation commands, man. Just use Zap.*
 
 ---
 
