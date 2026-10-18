@@ -45,26 +45,8 @@ public final class ConfigManager {
     }
 
     private static Properties defaultProperties() {
-
-        ZapConfig zapConfig = ZapConfig.defaults();
         Properties properties = new Properties();
-
-        properties.setProperty(
-                ConfigKeys.SOURCE_DIRECTORY, zapConfig.sourceDirectory().toString()
-        );
-        properties.setProperty(
-                ConfigKeys.COMPILER_EXECUTABLE, zapConfig.compilerExecutable()
-        );
-        properties.setProperty(
-                ConfigKeys.OUTPUT_DIRECTORY, zapConfig.outputDirectory().toString()
-        );
-        properties.setProperty(
-                ConfigKeys.RUNTIME_EXECUTABLE, zapConfig.runtimeExecutable()
-        );
-        properties.setProperty(
-                ConfigKeys.MAIN_CLASS, zapConfig.mainClass()
-        );
-
+        ZapConfig.defaults().asMap().forEach(properties::setProperty);
         return properties;
     }
 
