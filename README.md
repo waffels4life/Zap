@@ -242,7 +242,7 @@ Every change is validated **before** it is written. A rejected change leaves the
 ```
 zap config --input Sara 30
 zap run                       # uses Sara, 30
-zap run --input Reza 25       # uses Reza, 25 (saved values are not merged)
+zap run --input Rick 999       # uses Rick, 999 (saved values are not merged)
 ```
 
 ### `zap help` and `zap version`
