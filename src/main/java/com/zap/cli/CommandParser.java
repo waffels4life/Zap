@@ -12,6 +12,10 @@ import java.util.Set;
 
 public final class CommandParser {
 
+    /*
+     * Every command line has it own separated list.
+     * one for execution and one for setting.
+     */
     private static final Set<String> RUN_OPTIONS =
             Set.of("--input", "--args");
 
@@ -19,13 +23,25 @@ public final class CommandParser {
             Set.of("--input", "--args", "--main", "--show", "--reset-all", "--reset");
 
     public Command parse(String[] args) {
+        // not nullable check
         Objects.requireNonNull(args, "args");
 
-        if (args.length == 0) {
+        /*
+         * if its empty, I consider it that you still don't know how
+         * work with zap.
+         *
+         * don't hesitate. type something!
+         */
+        if (args.length == 0)
             return new Command.Help();
-        }
 
+        // first argument is the command word
         String name = args[0];
+
+        /*
+         * I put other commands in a separate list. it's still the same data, and
+         * we are not returning a copy version of it.
+         */
         List<String> rest = List.of(args).subList(1, args.length);
 
         return switch (name) {
@@ -38,7 +54,24 @@ public final class CommandParser {
         };
     }
 
+    /*
+     * parse()
+     *   |-- parseInit     (count check)
+     *   |-- parseHelp     (count check)
+     *   |-- parseVersion  (empty check)
+     *   |-- parseRun      -> readOptions -> values
+     *   |-- parseConfig   -> readOptions -> requireFlag
+     *                                    -> resetOnly
+     *                                    -> requireValues
+     *                                    -> requireSingle
+     */
+
     private static Command parseInit(List<String> rest) {
+        /*
+         * No value             >> pick the default option
+         * One value            >> the main class package
+         * More than one value  >> Error
+         */
         return switch (rest.size()) {
             case 0 -> new Command.Init(ConfigKeys.AUTO_MAIN_CLASS);
             case 1 -> new Command.Init(rest.getFirst());
@@ -48,11 +81,14 @@ public final class CommandParser {
     }
 
     private static Command parseRun(List<String> rest) {
-        Map<String, List<String>> options = readOptions("run", rest, RUN_OPTIONS);
+        Map<String, List<String>> options = readOptions(
+                "run", rest, RUN_OPTIONS
+        );
 
         return new Command.Run(
                 values("run", "--input", options),
-                values("run", "--args", options));
+                values("run", "--args", options)
+        );
     }
 
     private static Command parseHelp(List<String> rest) {
@@ -60,31 +96,37 @@ public final class CommandParser {
             case 0 -> new Command.Help();
             case 1 -> new Command.HelpTopic(rest.getFirst());
             default -> throw CommandSyntaxException.invalidUsage(
-                    "help", "expected at most one command name");
+                    "help", "expected at most one command name"
+            );
         };
     }
 
     private static Command parseVersion(List<String> rest) {
-        if (!rest.isEmpty()) {
-            throw CommandSyntaxException.unknownOption("version", rest.getFirst());
-        }
+        if (!rest.isEmpty())
+            throw CommandSyntaxException.unknownOption(
+                    "version", rest.getFirst()
+            );
+
         return new Command.Version();
     }
 
     private static Command parseConfig(List<String> tokens) {
-        Map<String, List<String>> options = readOptions("config", tokens, CONFIG_OPTIONS);
+        Map<String, List<String>> options = readOptions(
+                "config", tokens, CONFIG_OPTIONS
+        );
 
         List<String> resetValues = options.remove("--reset");
         boolean reset = resetValues != null;
 
-        if (reset && !resetValues.isEmpty()) {
+        if (reset && !resetValues.isEmpty())
             throw CommandSyntaxException.invalidUsage(
-                    "config", "--reset takes no values");
-        }
-        if (options.size() != 1) {
+                    "config", "--reset takes no values"
+            );
+
+        if (options.size() != 1)
             throw CommandSyntaxException.invalidUsage(
-                    "config", "expected exactly one option");
-        }
+                    "config", "expected exactly one option"
+            );
 
         String option = options.keySet().iterator().next();
         List<String> values = options.get(option);
@@ -107,7 +149,9 @@ public final class CommandParser {
             case "--main" -> reset
                     ? resetOnly(option, values, new Command.ConfigResetMain())
                     : new Command.ConfigSetMain(requireSingle(option, values));
-            default -> throw new IllegalStateException("Unhandled option: " + option);
+            default -> throw new IllegalStateException(
+                    "Unhandled option: " + option
+            );
         };
     }
 
@@ -118,19 +162,37 @@ public final class CommandParser {
     private static Map<String, List<String>> readOptions(String command,
                                                          List<String> tokens,
                                                          Set<String> known) {
+        /*
+         * The rule is simple: every term is either an option or a value.
+         *
+         * Is the term in the list of allowed options? An empty list is opened for it.
+         * If that option has already appeared, it is a "duplicate" error.
+         * Is the term not an option, and no option has been opened yet? It is an "unknown option" error.
+         * Otherwise, the term is the value for the current option.
+         *
+         * input
+         * ["--input", "a", "b", "--args", "-v"]
+         *
+         * result
+         * { "--input": ["a","b"], "--args": ["-v"] }
+         */
         Map<String, List<String>> options = new LinkedHashMap<>();
         List<String> current = null;
 
         for (String token : tokens) {
             if (known.contains(token)) {
-                if (options.containsKey(token)) {
-                    throw CommandSyntaxException.duplicateOption(command, token);
-                }
+                if (options.containsKey(token))
+                    throw CommandSyntaxException.duplicateOption(
+                            command, token
+                    );
+
                 current = new ArrayList<>();
                 options.put(token, current);
             }
             else if (current == null) {
-                throw CommandSyntaxException.unknownOption(command, token);
+                throw CommandSyntaxException.unknownOption(
+                        command, token
+                );
             }
             else {
                 current.add(token);
@@ -144,42 +206,52 @@ public final class CommandParser {
                                        Map<String, List<String>> options) {
         List<String> values = options.get(option);
 
-        if (values == null) {
+        if (values == null)
             return List.of();
-        }
-        if (values.isEmpty()) {
-            throw CommandSyntaxException.missingValue(command, option);
-        }
+
+        if (values.isEmpty())
+            throw CommandSyntaxException.missingValue(
+                    command, option
+            );
+
         return values;
     }
 
     private static void requireFlag(String option, List<String> values, boolean reset) {
-        if (reset || !values.isEmpty()) {
+        if (reset || !values.isEmpty())
             throw CommandSyntaxException.invalidUsage(
-                    "config", option + " takes no values and cannot be combined with --reset");
-        }
+                    "config",
+                    option
+                            + " takes no values and cannot be combined with --reset"
+            );
     }
 
     private static Command resetOnly(String option, List<String> values, Command command) {
-        if (!values.isEmpty()) {
+        if (!values.isEmpty())
             throw CommandSyntaxException.invalidUsage(
-                    "config", option + " --reset takes no values");
-        }
+                    "config",
+                    option
+                            + " --reset takes no values"
+            );
+
         return command;
     }
 
     private static List<String> requireValues(String option, List<String> values) {
-        if (values.isEmpty()) {
-            throw CommandSyntaxException.missingValue("config", option);
-        }
+        if (values.isEmpty())
+            throw CommandSyntaxException.missingValue(
+                    "config", option
+            );
+
         return values;
     }
 
     private static String requireSingle(String option, List<String> values) {
-        if (values.size() != 1) {
+        if (values.size() != 1)
             throw CommandSyntaxException.invalidUsage(
-                    "config", option + " needs exactly one value");
-        }
+                    "config", option + " needs exactly one value"
+            );
+
         return values.getFirst();
     }
 }
