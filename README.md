@@ -23,10 +23,22 @@ Name? Age? Hello Oreo, age 4
 
 ---
 
+## The story: why I built this
+
+Compiling Java by hand was a nightmare for me. It felt like I was hacking into NASA, surrounded by a wall of strange symbols that looked like they came straight out of ancient Greece. One tiny change, and I had to type every class out again, over and over. And one wrong letter was enough to ruin everything.
+
+When we work in the terminal, we are either testing something, like coursework or an algorithm, or actually writing small terminal programs. And in those moments, I don't want to worry about *what* I need to compile, or *which* files to list. I just want to do my work in peace.
+
+So I built Zap.
+
+I suffered so you don't have to.
+
+---
+
 ## Table of contents
 
-- [Why I built Zap](#why-i-built-zap)
-- [What Zap does](#what-zap-does)
+- [The story: why I built this](#the-story-why-i-built-this)
+- [Why Zap](#why-zap)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -46,23 +58,7 @@ Name? Age? Hello Oreo, age 4
 
 ---
 
-## Why I built Zap
-
-Compiling Java files manually was a nightmare for me. It felt like I was assembling NASA's systems, armed with a bunch of weird letters that looked like they came straight out of Ancient Greece.
-
-Make one tiny change, and suddenly you're rewriting compilation commands with every class and method listed all over again. One wrong character, and the whole thing falls apart.
-
-But when we're working in the terminal, we're usually experimenting: solving an algorithm problem, testing an idea, working through an exercise, or building a small command-line program.
-
-I wanted to focus on what I was actually trying to build, not worry about which files to compile, which classes to include, or how to write the same ridiculously long command for the hundredth time.
-
-So I built Zap.
-
-**I suffered so you don't have to.**
-
----
-
-## What Zap does
+## Why Zap
 
 Running a small Java project from the terminal usually means typing a `javac` command with the right output directory and the right list of files, then a `java` command with the right class path and the right main class. Build tools solve this, but they also bring configuration files, plugins, and a learning curve that is too heavy for demos, exercises, and small tools.
 
@@ -73,9 +69,6 @@ find sources  ->  compile  ->  check the main method  ->  run
 ```
 
 Everything else is a saved setting you can change with one command.
-
-*Life's too short to hand-write compilation commands, man. Just use Zap.*
-
 ---
 
 ## Features
@@ -86,6 +79,7 @@ Everything else is a saved setting you can change with one command.
 - **Scripted input**: feed answers to `Scanner` / `System.in` from the command line, one-time or saved, so you can re-run interactive programs without typing.
 - **Program arguments**: pass `String[] args`, one-time or saved.
 - **Clean builds**: the output directory is emptied before every compile, so deleted classes never linger.
+- **Built-in help**: `zap help` and `zap help <command>`, generated from one catalog, so the help never disagrees with itself.
 - **Strict, friendly validation**: every configuration problem is reported at once, with a clear message.
 - **Atomic config writes**: the configuration file is never left half-written.
 - **Windows-safe**: sources are passed to the compiler through an argument file, so large projects do not hit the command line length limit.
@@ -259,19 +253,58 @@ Every change is validated **before** it is written. A rejected change leaves the
 **Priority**: values given to `run` replace the saved ones for that run.
 
 ```
-zap config --input Sara 30
-zap run                       # uses Sara, 30
-zap run --input Rick 999       # uses Rick, 999 (saved values are not merged)
+zap config --input Arsam 22
+zap run                       # uses Arsam, 22
+zap run --input Oreo 4        # uses Oreo, 4 (saved values are not merged)
 ```
 
 ### `zap help` and `zap version`
 
 ```
-zap help
+zap help          # overview of all commands
+zap help run      # detailed help for one command
+zap help config
 zap version
 ```
 
-> `zap help <command>` (detailed help for one command) is planned and not available yet.
+The overview and the detailed pages are generated from one command catalog, so they always match each other. Aliases work too: `zap help -r` shows the page of `run`.
+
+Example:
+
+```
+$ zap help run
+zap run - Compile and run the project
+
+Usage:
+  zap run [--input <value>...] [--args <value>...]
+  zap -r
+
+Description:
+  Compiles every .java file in the source directory, verifies
+  the main class, and runs it. Works from the project root or
+  from any folder inside it.
+  Values given here replace the saved ones for this run only.
+  The exit code of your program becomes the exit code of Zap.
+
+Options:
+  --input <value>...   Lines sent to the program's standard input
+  --args <value>...    Program arguments (the String[] args)
+
+Examples:
+  zap run
+  zap run --input Ali 20
+  zap run --args --verbose data.txt
+  zap run --input "hello world" --args -v
+
+Aliases: -r
+```
+
+An unknown topic is a usage error (exit code `2`):
+
+```
+$ zap help foo
+Error: Unknown command: foo. Run `zap help`.
+```
 
 ---
 
@@ -325,7 +358,7 @@ source.directory=src
  build project layout     absolute paths, output directory safety check
           │
           ▼
- discover sources         every .java file under source.directory
+   discover sources       every .java file under source.directory
           │
           ▼
  resolve main class       auto -> find Main.java      manual -> use the configured class
@@ -334,13 +367,13 @@ source.directory=src
  clean output directory   remove stale classes
           │
           ▼
- compile                  javac -encoding UTF-8 -d <output> @<argument file>
+        compile           javac -encoding UTF-8 -d <output> @<argument file>
           │
           ▼
  verify main method       load the class, check: public static void main(String[])
           │
           ▼
- run                      java -cp <output> <MainClass> <args>   (working directory = project root)
+         run              java -cp <output> <MainClass> <args>   (working directory = project root)
 ```
 
 The main class is resolved **before** compiling, so a missing or ambiguous entry point fails fast.
@@ -449,7 +482,13 @@ com.zap
 │   ├── Command                 sealed interface, one record per command
 │   ├── CommandParser           parses arguments, never touches the disk
 │   ├── InitCommandHandler      `zap init`   (prints)
-│   └── ConfigCommandHandler    `zap config` (prints)
+│   ├── ConfigCommandHandler    `zap config` (prints)
+│   ├── HelpCommandHandler      `zap help`   (prints)
+│   └── help/                   one source of truth for all help text
+│       ├── HelpCatalog               the texts of every command
+│       ├── CommandDoc                usage, description, options, examples
+│       ├── OptionDoc                 one option and its description
+│       └── HelpFormatter             turns docs into text (returns a String)
 │
 ├── config/                     reading, checking and writing settings
 │   ├── ConfigKeys              key names, one place
@@ -533,6 +572,7 @@ What the manager decides:
 8. **Paths are resolved once.** `ProjectLayout` is the only place where configuration paths become absolute paths, and where output safety is checked.
 9. **No checked exceptions leak out of the engine.**
 10. **No hidden defaults for an uninitialized project.** A project must be initialized on purpose.
+11. **One source of truth for help.** Help texts live in one catalog. The overview, every detail page and the aliases are built from it, and the formatter only returns strings, so it can be tested without printing.
 
 ---
 
@@ -545,7 +585,6 @@ What the manager decides:
 - Only the classic `public static void main(String[] args)` form is accepted. Newer instance `main` forms are not.
 - `zap config` rewrites the whole configuration file; hand-written comments and unknown keys are lost.
 - Resetting a setting writes its default value explicitly instead of removing the key.
-- `zap help <command>` is not implemented yet.
 - Automated tests are not written yet.
 
 ---
@@ -556,7 +595,7 @@ What the manager decides:
 - [x] saved and one-time inputs and arguments
 - [x] automatic and manual main class, with verification
 - [x] atomic configuration writes, output directory safety
-- [ ] `zap help <command>`, generated from the command list
+- [x] `zap help <command>`, generated from one command catalog
 - [ ] unit tests: parser, validator, manager, writer, finder, verifier
 - [ ] `--verbose` mode (show what Zap is doing)
 - [ ] extra class path entries (external jars)
@@ -567,8 +606,8 @@ What the manager decides:
 ## Building from source
 
 ```
-git clone <your-repository-url>
-cd zap
+git clone https://github.com/waffels4life/Zap.git
+cd Zap
 mvn clean package
 ```
 
@@ -583,3 +622,9 @@ Run the tests (once they exist):
 ```
 mvn test
 ```
+
+---
+
+_Life is too short to hand-write compilation commands. Just use Zap._
+
+`-v 1.1.0 SNAPSHOT`
