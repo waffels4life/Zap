@@ -20,28 +20,36 @@ public final class SourceDiscovery {
     public List<Path> discover(Path sourceDirectory) {
         Objects.requireNonNull(sourceDirectory, "sourceDirectory");
 
-        if (!Files.isDirectory(sourceDirectory)) {
+        if (!Files.isDirectory(sourceDirectory))
             throw new ProjectStructureException(
-                    "Source directory not found: " + sourceDirectory);
-        }
+                    "Source directory not found: " + sourceDirectory
+            );
 
         try (Stream<Path> paths = Files.find(
                 sourceDirectory,
                 Integer.MAX_VALUE,
-                (path, attributes) -> attributes.isRegularFile() && isJavaSource(path))) {
+                (path, attributes) -> attributes
+                        .isRegularFile()
+                        &&
+                        isJavaSource(path))) {
 
             return paths
-                    .map(path -> path.toAbsolutePath().normalize())
+                    .map(path -> path
+                            .toAbsolutePath()
+                            .normalize())
                     .sorted()
                     .toList();
         }
         catch (IOException | UncheckedIOException e) {
             throw new ZapIoException(
-                    "Cannot scan source directory: " + sourceDirectory, e);
+                    "Cannot scan source directory: "
+                            + sourceDirectory, e
+            );
         }
     }
 
     private static boolean isJavaSource(Path path) {
+        Objects.requireNonNull(path, "path");
         return path.getFileName().toString().endsWith(".java");
     }
 }
