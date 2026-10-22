@@ -23,7 +23,9 @@ public final class CompilerRunner {
                         Path outputDirectory,
                         Path workingDirectory) {
 
+        Objects.requireNonNull(outputDirectory, "outputDirectory");
         Path argumentFile = writeArgumentFile(sources);
+
         try {
             List<String> command = List.of(
                     compiler,
@@ -32,10 +34,13 @@ public final class CompilerRunner {
                     "@" + argumentFile
             );
 
-            int exitCode = processRunner.run(command, workingDirectory, List.of());
-            if (exitCode != 0) {
-                throw new CompilationFailedException(exitCode);
-            }
+            int exitCode = processRunner.run(
+                    command, workingDirectory, List.of()
+            );
+            if (exitCode != 0)
+                throw new CompilationFailedException(
+                        exitCode
+                );
         }
         finally {
             deleteQuietly(argumentFile);
@@ -43,6 +48,7 @@ public final class CompilerRunner {
     }
 
     private static Path writeArgumentFile(List<Path> sources) {
+        Objects.requireNonNull(sources, "sources");
         try {
             Path file = Files.createTempFile("zap-sources-", ".txt");
             List<String> lines = sources.stream()
@@ -52,16 +58,17 @@ public final class CompilerRunner {
             return file;
         }
         catch (IOException e) {
-            throw new ZapIoException("Cannot prepare the source list for the compiler", e);
+            throw new ZapIoException(
+                    "Cannot prepare the source list for the compiler",
+                    e
+            );
         }
     }
 
     private static void deleteQuietly(Path file) {
         try {
             Files.deleteIfExists(file);
-        }
-        catch (IOException ignored) {
-            // A leftover temp file is harmless and must not hide the real result.
-        }
+        } // A leftover temp file is harmless and must not hide the real result.
+        catch (IOException _) {}
     }
 }
