@@ -173,7 +173,7 @@ public final class Zap {
                   init [auto | <package.Class>]         Initialize Zap in the current project
                   run, -r [--input ...] [--args ...]    Compile and run the project
                   config <option>                       Change the saved settings
-                  help [<command>]                      Show help (WIP)
+                  help [<command>]                      Show help
                   version                               Show the version
                 """);
     }
