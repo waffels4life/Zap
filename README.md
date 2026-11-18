@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/zap-logo.png" alt="Zap Logo" width="220" style="border-radius: 6px">
+  <img src="assets/zap-logo.png" alt="Zap Logo" width="190" style="border-radius: 6px">
 </p>
 
 <h1 align="center">Zap</h1>
