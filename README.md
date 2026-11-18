@@ -1,8 +1,17 @@
-# Zap
+<p align="center">
+  <img src="assets/zap-logo.png" alt="Zap Logo" width="220" style="border-radius: 6px">
+</p>
 
-**A tiny command line tool that compiles and runs a Java project with one short command.**
+<h1 align="center">Zap</h1>
+
+<p align="center">
+A tiny command line tool that compiles and runs a Java project with one short command.
+</p>
+
+---
 
 No build files. No plugins. No ceremony. Put your code in a folder, run `zap init`, then `zap run`.
+
 
 ![Java](https://img.shields.io/badge/Java-22%2B-orange)
 ![Build](https://img.shields.io/badge/build-Maven-blue)
