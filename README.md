@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/zap-logo.png" alt="Zap Logo" width="190" style="border-radius: 6px">
+  <img src="assets/zap-logo.png" alt="Zap Logo" width="551" style="border-radius: 6px">
 </p>
 
 <h1 align="center">Zap</h1>
@@ -96,6 +96,7 @@ Everything else is a saved setting you can change with one command.
 - **Scripted input**: feed answers to `Scanner` / `System.in` from the command line, one-time or saved, so you can re-run interactive programs without typing.
 - **Program arguments**: pass `String[] args`, one-time or saved.
 - **Clean builds**: the output directory is emptied before every compile, so deleted classes never linger.
+- **Project inspection**: `zap files` lists regular files in the configured source directory with their sizes.
 - **Built-in help**: `zap help` and `zap help <command>`, generated from one catalog, so the help never disagrees with itself.
 - **Strict, friendly validation**: every configuration problem is reported at once, with a clear message.
 - **Atomic config writes**: the configuration file is never left half-written.
@@ -202,6 +203,7 @@ That's it. Zap created `.zap/config.properties`, compiled your code into `.zap/c
 zap init [auto | <package.Class>]
 zap run [--input <v>...] [--args <a>...]
 zap config <option>
+zap files
 zap help [<command>]
 zap version
 ```
@@ -276,6 +278,16 @@ zap config --input Arsam 22
 zap run                       # uses Arsam, 22
 zap run --input Oreo 4        # uses Oreo, 4 (saved values are not merged)
 ```
+
+### `zap files`
+
+Lists every regular file under the configured source directory, recursively. This includes non-Java files such as `.properties` and images.
+
+```text
+zap files
+```
+
+Paths are shown relative to the source directory, sorted by name, with human-readable file sizes. Symbolic links are not followed. Empty directories are not listed.
 
 ### `zap help` and `zap version`
 
@@ -620,6 +632,8 @@ com.zap
 │   ├── CommandParser           parses arguments, never touches the disk
 │   ├── InitCommandHandler      `zap init`   (prints)
 │   ├── ConfigCommandHandler    `zap config` (prints)
+│   ├── FilesCommandHandler     `zap files`   (prints)
+│   ├── FileListFormatter       formats file metadata
 │   ├── HelpCommandHandler      `zap help`   (prints)
 │   └── help/                   one source of truth for all help text
 │       ├── HelpCatalog               the texts of every command
@@ -641,7 +655,9 @@ com.zap
 │   ├── ProjectLocator          finds the project root
 │   ├── ProjectLayout           absolute paths + output safety check
 │   ├── ProjectInitializer      first-time setup
-│   ├── SourceDiscovery         finds .java files
+│   ├── SourceDiscovery         finds .java files for compilation
+│   ├── ProjectFileScanner      finds regular files and their sizes
+│   ├── ProjectFile             relative path + size metadata
 │   ├── ClasspathResolver       resolves and validates external class path entries
 │   └── mainclass/
 │       ├── MainClassFinder           searches for Main.java
@@ -727,7 +743,7 @@ What the manager decides:
 - `zap config` rewrites the whole configuration file; hand-written comments and unknown keys are lost.
 - Resetting a setting writes its default value explicitly instead of removing the key.
 - The runtime class path is passed as a command-line argument. Extremely large class paths may eventually hit operating system command-line length limits, particularly on Windows.
-- Automated tests are not written yet.
+- Automated tests currently cover the `files` command and its supporting components; the rest of the application is not yet covered by a complete test suite.
 
 ---
 
@@ -739,7 +755,9 @@ What the manager decides:
 - [x] atomic configuration writes, output directory safety
 - [x] `zap help <command>`, generated from one command catalog
 - [x] external class path entries (JARs, ZIPs, directories, and wildcards)
-- [ ] unit tests: parser, validator, manager, writer, finder, verifier, class path resolver
+- [x] `zap files` source directory inspection
+- [x] unit tests: `files` command (file model, scanner, formatter, parser, handler, and help catalog)
+- [ ] unit tests: remaining parser commands, validator, manager, writer, finder, verifier, class path resolver
 - [ ] `--verbose` mode (show what Zap is doing)
 - [ ] resource files support
 - [ ] improved runtime class path handling for very large dependency lists
@@ -760,11 +778,24 @@ Result:
 target/zap.jar
 ```
 
-Run the tests (once they exist):
+Run the automated tests:
 
 ```text
 mvn test
 ```
+
+### Test coverage
+
+The current automated test suite focuses on `zap files`:
+
+- `ProjectFileTest`: validates file metadata invariants.
+- `ProjectFileScannerTest`: recursive discovery, relative-path sorting, file sizes, empty directories, symbolic links, and invalid source paths.
+- `FileListFormatterTest`: empty and populated output, column alignment, singular/plural counts, and byte-size formatting.
+- `CommandParserFilesTest`: accepts `files` and rejects unsupported arguments.
+- `FilesCommandHandlerTest`: reads the configured source directory, locates a project from a nested working directory, and reports missing projects or source directories.
+- `FilesHelpTest`: verifies that the command is present in the help catalog and documents its behavior.
+
+These tests do not imply full application coverage. Tests for the remaining CLI commands, configuration pipeline, compilation, and execution are still pending.
 
 ---
 
