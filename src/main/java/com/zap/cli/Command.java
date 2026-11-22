@@ -20,6 +20,8 @@ public sealed interface Command {
 
     record Version() implements Command {}
 
+    record Files() implements Command {}
+
     sealed interface ConfigCommand extends Command {}
 
     record ConfigSetInput(List<String> values) implements ConfigCommand {
