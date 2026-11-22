@@ -38,6 +38,7 @@ public final class HelpCatalog {
                 initDoc(),
                 runDoc(),
                 configDoc(),
+                filesDoc(),
                 helpDoc(),
                 versionDoc()));
     }
@@ -133,6 +134,21 @@ public final class HelpCatalog {
                         "zap config --show"));
     }
 
+
+    private static CommandDoc filesDoc() {
+        return new CommandDoc(
+                "files",
+                List.of(),
+                "List files in the source directory",
+                List.of("zap files"),
+                List.of(
+                        "Lists every regular file under the configured source directory,",
+                        "including files that are not Java source files.",
+                        "Paths are relative to the source directory and sorted by name.",
+                        "Symbolic links are not followed."),
+                List.of(),
+                List.of("zap files"));
+    }
 
     private static CommandDoc helpDoc() {
         return new CommandDoc(

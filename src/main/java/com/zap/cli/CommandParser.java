@@ -49,6 +49,7 @@ public final class CommandParser {
             case "init" -> parseInit(rest);
             case "run", "-r" -> parseRun(rest);
             case "config" -> parseConfig(rest);
+            case "files" -> parseFiles(rest);
             case "help", "-h", "--help" -> parseHelp(rest);
             case "version", "-v", "--version" -> parseVersion(rest);
             default -> throw CommandSyntaxException.unknownCommand(name);
@@ -100,6 +101,15 @@ public final class CommandParser {
                     "help", "expected at most one command name"
             );
         };
+    }
+
+    private static Command parseFiles(List<String> rest) {
+        if (!rest.isEmpty())
+            throw CommandSyntaxException.invalidUsage(
+                    "files", "does not accept options"
+            );
+
+        return new Command.Files();
     }
 
     private static Command parseVersion(List<String> rest) {
